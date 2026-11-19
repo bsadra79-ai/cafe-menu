@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منوی آنلاین | کافه و تغذیه تخصصی ورزشی</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Vazirmatn', 'sans-serif'] },
+                    colors: {
+                        gold: {
+                            100: '#FDF6E2', 200: '#F9E6B3', 300: '#F2D07D',
+                            400: '#E6B84D', 500: '#D4AF37', 600: '#B89225',
+                            700: '#947218', 800: '#6E5310', 900: '#4A3709',
+                        },
+                        obsidian: { 800: '#18181B', 900: '#101013', 950: '#09090B' }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { font-family: 'Vazirmatn', sans-serif; background-color: #09090B; color: #F4F4F5; overflow-x: hidden; }
+        .text-gold-gradient { background: linear-gradient(135deg, #F9E6B3 0%, #D4AF37 50%, #B89225 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .bg-gold-gradient { background: linear-gradient(135deg, #E6B84D 0%, #D4AF37 50%, #947218 100%); }
+        .gold-card { background: linear-gradient(145deg, rgba(24, 24, 27, 0.9) 0%, rgba(16, 16, 19, 0.95) 100%); border: 1px solid rgba(212, 175, 55, 0.2); transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
+        .gold-card:hover { border-color: rgba(212, 175, 55, 0.6); box-shadow: 0 12px 30px -10px rgba(212, 175, 55, 0.18); transform: translateY(-4px); }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #09090B; }
+        ::-webkit-scrollbar-thumb { background: #3F3F46; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #D4AF37; }
+        @keyframes pulse-border { 0%, 100% { border-color: rgba(212, 175, 55, 0.4); } 50% { border-color: rgba(212, 175, 55, 1); } }
+        .animate-gold-border { animation: pulse-border 2.5s infinite; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-gold-500 selection:text-black">
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 transition-all duration-300 transform -translate-y-4">
+        <div class="bg-obsidian-800 border-2 border-gold-500 text-gold-200 px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 backdrop-blur-md">
+            <i class="ph-fill ph-check-circle text-gold-400 text-2xl"></i>
+            <span id="toast-message" class="font-medium text-sm sm:text-base">با موفقیت انجام شد!</span>
+        </div>
+    </div>
+
+    <!-- Hero Header -->
+    <header class="relative overflow-hidden border-b border-gold-500/20 bg-obsidian-900 pt-8 pb-6 px-4">
+        <div class="absolute -top-24 -right-24 w-72 h-72 bg-gold-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-24 -left-24 w-72 h-72 bg-gold-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="max-w-5xl mx-auto text-center relative z-10">
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gold-500/10 border border-gold-500/30 text-gold-300 text-xs sm:text-sm font-medium mb-4">
+                <i class="ph-fill ph-barbell text-gold-400 text-lg"></i>
+                <span>تغذیه تخصصی ورزشی و کافه سلامت</span>
+            </div>
+
+            <h1 class="text-3xl sm:text-5xl font-black tracking-tight mb-3 text-gold-gradient">
+                منوی کافه و رستوران ورزشی
+            </h1>
+            <p class="text-zinc-400 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
+                تهیه شده از بهترین و باکیفیت‌ترین مواد اولیه پروتئینی و رژیمی جهت تامین انرژی و ریکاوری حرفه‌ای شما
+            </p>
+
+            <div class="mt-6 max-w-2xl mx-auto bg-gradient-to-r from-gold-900/30 via-gold-600/20 to-gold-900/30 border border-gold-500/50 rounded-2xl p-3.5 sm:p-4 flex items-center justify-center gap-3 animate-gold-border shadow-lg">
+                <i class="ph-fill ph-clock-countdown text-gold-400 text-2xl sm:text-3xl shrink-0 animate-bounce"></i>
+                <p class="text-gold-100 font-bold text-xs sm:text-base text-right sm:text-center">
+                    توجه: لطفاً حتماً سفارش خود را <span class="text-gold-400 underline decoration-gold-400/60 underline-offset-4">۳۰ دقیقه قبل از اتمام تمرین</span> ثبت نمایید.
+                </p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sticky Navigation & Search Bar -->
+    <nav class="sticky top-0 z-30 bg-obsidian-950/85 backdrop-blur-xl border-b border-zinc-800/80 py-3 px-4 shadow-lg">
+        <div class="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div class="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
+                <button onclick="filterCategory('all')" id="tab-all" class="cat-btn active-tab shrink-0 px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 bg-gold-gradient text-black shadow-md">
+                    <i class="ph-fill ph-squares-four text-lg"></i>
+                    <span>همه موارد</span>
+                </button>
+                <button onclick="filterCategory('cold')" id="tab-cold" class="cat-btn shrink-0 px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 bg-obsidian-800 text-zinc-300 hover:text-gold-300 border border-zinc-700/60">
+                    <i class="ph-fill ph-beer-bottle text-lg text-gold-400"></i>
+                    <span>نوشیدنی‌های خنک</span>
+                </button>
+                <button onclick="filterCategory('coffee')" id="tab-coffee" class="cat-btn shrink-0 px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 bg-obsidian-800 text-zinc-300 hover:text-gold-300 border border-zinc-700/60">
+                    <i class="ph-fill ph-coffee text-lg text-gold-400"></i>
+                    <span>قهوه‌ها</span>
+                </button>
+                <button onclick="filterCategory('meals')" id="tab-meals" class="cat-btn shrink-0 px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 bg-obsidian-800 text-zinc-300 hover:text-gold-300 border border-zinc-700/60">
+                    <i class="ph-fill ph-bowl-food text-lg text-gold-400"></i>
+                    <span>وعده‌های غذایی</span>
+                </button>
+            </div>
+
+            <div class="relative w-full sm:w-64">
+                <input type="text" id="search-input" oninput="handleSearch(this.value)" placeholder="جستجو در منو (مثلاً: پروتئین)..." class="w-full bg-obsidian-800 text-zinc-200 placeholder-zinc-500 text-sm rounded-xl py-2 pr-10 pl-4 border border-zinc-700/80 focus:outline-none focus:border-gold-500 transition-colors">
+                <i class="ph ph-magnifying-glass absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 text-lg"></i>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Menu Container -->
+    <main class="max-w-5xl w-full mx-auto px-4 py-8 flex-grow space-y-12">
+
+        <!-- Loading Spinner -->
+        <div id="loading-state" class="text-center py-16">
+            <i class="ph ph-spinner-gap text-5xl text-gold-400 animate-spin inline-block mb-3"></i>
+            <p class="text-zinc-400 text-sm">در حال بارگذاری منو...</p>
+        </div>
+
+        <!-- Section 1: Cold Drinks -->
+        <section id="sec-cold" class="menu-section space-y-6 hidden">
+            <div class="flex items-center gap-3 border-b border-gold-500/20 pb-3">
+                <div class="w-10 h-10 rounded-xl bg-gold-500/10 border border-gold-500/40 flex items-center justify-center text-gold-400">
+                    <i class="ph-fill ph-beer-bottle text-2xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl sm:text-2xl font-extrabold text-gold-300">نوشیدنی‌های خنک و شیک‌ها</h2>
+                    <p class="text-xs text-zinc-400">سرشار از پروتئین و انرژی، مناسب پیش و پس از تمرین</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5" id="grid-cold"></div>
+        </section>
+
+        <!-- Section 2: Coffees -->
+        <section id="sec-coffee" class="menu-section space-y-6 hidden">
+            <div class="flex items-center gap-3 border-b border-gold-500/20 pb-3">
+                <div class="w-10 h-10 rounded-xl bg-gold-500/10 border border-gold-500/40 flex items-center justify-center text-gold-400">
+                    <i class="ph-fill ph-coffee text-2xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl sm:text-2xl font-extrabold text-gold-300">قهوه‌ها و نوشیدنی‌های گرم</h2>
+                    <p class="text-xs text-zinc-400">افزایش تمرکز، چربی‌سوزی و انرژی خالص</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5" id="grid-coffee"></div>
+        </section>
+
+        <!-- Section 3: Meals -->
+        <section id="sec-meals" class="menu-section space-y-6 hidden">
+            <div class="flex items-center gap-3 border-b border-gold-500/20 pb-3">
+                <div class="w-10 h-10 rounded-xl bg-gold-500/10 border border-gold-500/40 flex items-center justify-center text-gold-400">
+                    <i class="ph-fill ph-bowl-food text-2xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl sm:text-2xl font-extrabold text-gold-300">وعده‌های غذایی رژیمی و ورزشی</h2>
+                    <p class="text-xs text-zinc-400">پخت سالم، فیله گریل و نان پروتئینی تازه</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5" id="grid-meals"></div>
+        </section>
+
+        <!-- Empty Search State -->
+        <div id="empty-search" class="hidden text-center py-12 bg-obsidian-900/60 rounded-2xl border border-zinc-800">
+            <i class="ph ph-magnifying-glass text-5xl text-gold-500/50 mb-3 inline-block"></i>
+            <p class="text-zinc-300 font-bold text-lg">موردی با این عبارت یافت نشد!</p>
+            <p class="text-zinc-500 text-sm mt-1">لطفاً واژه دیگری را جستجو کنید یا دسته‌بندی را تغییر دهید.</p>
+        </div>
+
+        <!-- Interactive Order Calculator Box -->
+        <section id="order-box" class="bg-obsidian-900 border-2 border-gold-500/40 rounded-3xl p-5 sm:p-7 shadow-2xl relative overflow-hidden">
+            <div class="flex items-center justify-between border-b border-zinc-800 pb-4 mb-4">
+                <div class="flex items-center gap-3">
+                    <i class="ph-fill ph-shopping-bag text-gold-400 text-2xl sm:text-3xl"></i>
+                    <div>
+                        <h3 class="font-extrabold text-lg sm:text-xl text-white">لیست سفارش و محاسبه‌گر هزینه</h3>
+                        <p class="text-xs text-zinc-400">اقلام دلخواه را از منو اضافه کنید تا مبلغ کل محاسبه شود</p>
+                    </div>
+                </div>
+                <button onclick="clearCart()" id="clear-cart-btn" class="hidden text-xs text-red-400 hover:text-red-300 bg-red-500/10 border border-red-500/20 px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1">
+                    <i class="ph ph-trash"></i>
+                    <span>پاک کردن لیست</span>
+                </button>
+            </div>
+
+            <div id="cart-items" class="space-y-3 mb-4">
+                <p class="text-zinc-500 text-sm text-center py-4">هنوز آیتمی به لیست محاسبه اضافه نکرده‌اید. روی دکمه <span class="text-gold-400 font-bold">«+ افزودن»</span> در کنار آیتم‌ها کلیک کنید.</p>
+            </div>
+
+            <div id="cart-summary" class="hidden border-t border-zinc-800 pt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="text-center sm:text-right">
+                    <span class="text-zinc-400 text-sm">مبلغ قابل پرداخت:</span>
+                    <div class="text-2xl sm:text-3xl font-black text-gold-400 mt-0.5">
+                        <span id="cart-total">۰</span> <span class="text-sm font-normal text-gold-200">هزار تومان</span>
+                    </div>
+                </div>
+                <a href="#payment-section" class="w-full sm:w-auto text-center bg-gold-gradient text-black font-extrabold px-6 py-3 rounded-xl shadow-lg hover:brightness-110 transition-all flex items-center justify-center gap-2">
+                    <i class="ph-fill ph-credit-card text-xl"></i>
+                    <span>مشاهده اطلاعات واریز</span>
+                </a>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer: Payment & Notice Info -->
+    <footer id="payment-section" class="bg-obsidian-900 border-t-2 border-gold-500/40 pt-10 pb-12 px-4 mt-8 relative overflow-hidden">
+        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-32 bg-gold-500/10 blur-3xl pointer-events-none"></div>
+
+        <div class="max-w-4xl mx-auto space-y-8 relative z-10">
+            <div class="bg-gradient-to-r from-obsidian-950 via-obsidian-800 to-obsidian-950 border-2 border-gold-500 rounded-2xl p-5 sm:p-6 text-center shadow-xl">
+                <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gold-500/20 text-gold-400 mb-3">
+                    <i class="ph-fill ph-bell-ringing text-2xl animate-pulse"></i>
+                </div>
+                <h3 class="text-lg sm:text-2xl font-black text-gold-300 mb-2">
+                    حتماً سفارش را ۳۰ دقیقه قبل از اتمام تمرین سفارش دهید
+                </h3>
+                <p class="text-zinc-400 text-xs sm:text-sm">
+                    جهت آماده‌سازی تازه و تحویل به‌موقع وعده‌های غذایی و شیک‌های پروتئینی، لطفاً نیم ساعت پیش از پایان تمرین اقدام به ثبت سفارش نمایید.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="gold-card rounded-2xl p-6 flex flex-col justify-between relative overflow-hidden group">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-xs font-bold uppercase tracking-wider text-gold-400 bg-gold-500/10 px-3 py-1 rounded-lg border border-gold-500/20">شماره کارت بانکی</span>
+                        <i class="ph-fill ph-credit-card text-3xl text-gold-500/60"></i>
+                    </div>
+                    <div class="my-3 text-center">
+                        <div class="font-mono text-xl sm:text-2xl font-black tracking-widest text-white select-all" dir="ltr">5859 - 8310 - 2662 - 9435</div>
+                        <p class="text-xs text-zinc-400 mt-2">به نام: <span class="text-gold-300 font-bold text-sm">علیرضا قریب گرگانی</span></p>
+                    </div>
+                    <button onclick="copyText('5859831026629435', 'شماره کارت با موفقیت کپی شد')" class="mt-4 w-full bg-obsidian-950 hover:bg-gold-500 hover:text-black text-gold-300 border border-gold-500/40 font-bold py-2.5 px-4 rounded-xl transition-all flex items-center justify-center gap-2 text-sm">
+                        <i class="ph ph-copy text-lg"></i>
+                        <span>کپی شماره کارت</span>
+                    </button>
+                </div>
+
+                <div class="gold-card rounded-2xl p-6 flex flex-col justify-between relative overflow-hidden group">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-xs font-bold uppercase tracking-wider text-gold-400 bg-gold-500/10 px-3 py-1 rounded-lg border border-gold-500/20">شماره حساب بانکی</span>
+                        <i class="ph-fill ph-bank text-3xl text-gold-500/60"></i>
+                    </div>
+                    <div class="my-3 text-center">
+                        <div class="font-mono text-xl sm:text-2xl font-black tracking-widest text-white select-all" dir="ltr">0338255715736</div>
+                        <p class="text-xs text-zinc-400 mt-2">به نام: <span class="text-gold-300 font-bold text-sm">علیرضا قریب گرگانی</span></p>
+                    </div>
+                    <button onclick="copyText('0338255715736', 'شماره حساب با موفقیت کپی شد')" class="mt-4 w-full bg-obsidian-950 hover:bg-gold-500 hover:text-black text-gold-300 border border-gold-500/40 font-bold py-2.5 px-4 rounded-xl transition-all flex items-center justify-center gap-2 text-sm">
+                        <i class="ph ph-copy text-lg"></i>
+                        <span>کپی شماره حساب</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="text-center pt-4 border-t border-zinc-800/80 text-zinc-500 text-xs flex flex-col sm:flex-row items-center justify-between gap-2">
+                <span>طراحی اختصاصی منوی دیجیتال کافه ورزشی</span>
+                <div class="flex items-center gap-4">
+                    <span class="text-gold-400/80 font-medium">نوش جان و تمرین خوبی داشته باشید! 💪</span>
+                    <a href="admin.html" class="text-zinc-600 hover:text-gold-400 transition-colors" title="ورود مدیریت">
+                        <i class="ph ph-lock-key text-base"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="config.js"></script>
+    <script>
+        let menuItems = [];
+        let cart = {};
+        let currentCategory = 'all';
+
+        function toPersianDigits(num) {
+            const farsiDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+            return num.toString().replace(/\d/g, x => farsiDigits[x]);
+        }
+
+        async function loadMenuFromDB() {
+            const { data, error } = await supabaseClient
+                .from('menu_items')
+                .select('*')
+                .order('id', { ascending: true });
+
+            document.getElementById('loading-state').classList.add('hidden');
+
+            if (error) {
+                showToast('خطا در دریافت منو از سرور!');
+                console.error(error);
+                return;
+            }
+
+            menuItems = data || [];
+            renderMenu();
+        }
+
+        function createCardHTML(item) {
+            const fallbackUrl = `https://placehold.co/400x300/18181B/D4AF37?text=${encodeURIComponent(item.name)}`;
+            const priceText = item.price !== null ? `${toPersianDigits(item.price)} هزار تومان` : 'وعده ویژه';
+            const isAvailable = item.available !== false;
+
+            let actionButton = '';
+            if (!isAvailable) {
+                actionButton = `<span class="text-xs text-red-400 bg-red-500/10 border border-red-500/30 px-3 py-1.5 rounded-xl font-bold">ناموجود</span>`;
+            } else if (item.price !== null) {
+                actionButton = `<button onclick="addToCart(${item.id})" class="bg-gold-500/15 hover:bg-gold-500 hover:text-black text-gold-300 border border-gold-500/40 font-bold text-xs sm:text-sm px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 shrink-0">
+                        <i class="ph-bold ph-plus"></i>
+                        <span>افزودن</span>
+                   </button>`;
+            } else {
+                actionButton = `<span class="text-xs text-gold-400/90 bg-gold-500/10 border border-gold-500/30 px-3 py-1.5 rounded-xl font-medium">موجود در منو</span>`;
+            }
+
+            return `
+                <article class="gold-card rounded-2xl p-3.5 sm:p-4 flex gap-4 items-center group ${!isAvailable ? 'opacity-50 grayscale' : ''}">
+                    <div class="relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden shrink-0 border border-gold-500/30 bg-obsidian-950">
+                        <img src="${item.image || fallbackUrl}" alt="${item.name}" onerror="this.onerror=null; this.src='${fallbackUrl}';" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy">
+                        ${item.badge ? `<span class="absolute top-1.5 right-1.5 bg-obsidian-950/85 backdrop-blur-md text-gold-300 border border-gold-500/40 text-[10px] font-bold px-2 py-0.5 rounded-lg">${item.badge}</span>` : ''}
+                    </div>
+                    <div class="flex flex-col justify-between flex-grow min-w-0 h-full py-0.5">
+                        <div>
+                            <h3 class="font-extrabold text-base sm:text-lg text-white group-hover:text-gold-300 transition-colors truncate">${item.name}</h3>
+                            <p class="text-zinc-400 text-xs sm:text-sm mt-1 leading-relaxed line-clamp-2">${item.description || ''}</p>
+                        </div>
+                        <div class="flex items-center justify-between gap-2 mt-3 pt-2.5 border-t border-zinc-800/80">
+                            <div class="font-black text-gold-400 text-sm sm:text-base">${priceText}</div>
+                            ${actionButton}
+                        </div>
+                    </div>
+                </article>
+            `;
+        }
+
+        function renderMenu(filterText = '') {
+            const coldGrid = document.getElementById('grid-cold');
+            const coffeeGrid = document.getElementById('grid-coffee');
+            const mealsGrid = document.getElementById('grid-meals');
+
+            coldGrid.innerHTML = '';
+            coffeeGrid.innerHTML = '';
+            mealsGrid.innerHTML = '';
+
+            const query = filterText.trim().toLowerCase();
+            let totalShown = 0;
+
+            menuItems.forEach(item => {
+                const matchesSearch = item.name.toLowerCase().includes(query) || (item.description || '').toLowerCase().includes(query);
+                const matchesCat = currentCategory === 'all' || item.category === currentCategory;
+                if (!matchesSearch || !matchesCat) return;
+
+                totalShown++;
+                const cardHTML = createCardHTML(item);
+                if (item.category === 'cold') coldGrid.innerHTML += cardHTML;
+                else if (item.category === 'coffee') coffeeGrid.innerHTML += cardHTML;
+                else if (item.category === 'meals') mealsGrid.innerHTML += cardHTML;
+            });
+
+            document.getElementById('sec-cold').classList.toggle('hidden', coldGrid.innerHTML === '');
+            document.getElementById('sec-coffee').classList.toggle('hidden', coffeeGrid.innerHTML === '');
+            document.getElementById('sec-meals').classList.toggle('hidden', mealsGrid.innerHTML === '');
+            document.getElementById('empty-search').classList.toggle('hidden', totalShown > 0);
+        }
+
+        function filterCategory(category) {
+            currentCategory = category;
+            document.getElementById('search-input').value = '';
+
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                btn.className = 'cat-btn shrink-0 px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 bg-obsidian-800 text-zinc-300 hover:text-gold-300 border border-zinc-700/60';
+            });
+            document.getElementById(`tab-${category}`).className = 'cat-btn active-tab shrink-0 px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 bg-gold-gradient text-black shadow-md';
+
+            renderMenu('');
+        }
+
+        function handleSearch(val) { renderMenu(val); }
+
+        function addToCart(id) {
+            const item = menuItems.find(i => i.id === id);
+            if (!item || item.price === null) return;
+            cart[id] ? cart[id].qty += 1 : cart[id] = { item, qty: 1 };
+            showToast(`«${item.name}» به لیست محاسبه اضافه شد`);
+            renderCart();
+        }
+
+        function changeQty(id, delta) {
+            if (!cart[id]) return;
+            cart[id].qty += delta;
+            if (cart[id].qty <= 0) delete cart[id];
+            renderCart();
+        }
+
+        function clearCart() { cart = {}; renderCart(); }
+
+        function renderCart() {
+            const container = document.getElementById('cart-items');
+            const summary = document.getElementById('cart-summary');
+            const clearBtn = document.getElementById('clear-cart-btn');
+            const totalEl = document.getElementById('cart-total');
+            const entries = Object.values(cart);
+
+            if (entries.length === 0) {
+                container.innerHTML = `<p class="text-zinc-500 text-sm text-center py-4">هنوز آیتمی به لیست محاسبه اضافه نکرده‌اید. روی دکمه <span class="text-gold-400 font-bold">«+ افزودن»</span> در کنار آیتم‌ها کلیک کنید.</p>`;
+                summary.classList.add('hidden');
+                clearBtn.classList.add('hidden');
+                return;
+            }
+
+            summary.classList.remove('hidden');
+            clearBtn.classList.remove('hidden');
+
+            let total = 0;
+            container.innerHTML = entries.map(({ item, qty }) => {
+                const rowSum = item.price * qty;
+                total += rowSum;
+                return `
+                    <div class="flex items-center justify-between bg-obsidian-950/90 border border-zinc-800 px-4 py-3 rounded-xl">
+                        <div>
+                            <h4 class="font-bold text-sm sm:text-base text-white">${item.name}</h4>
+                            <span class="text-xs text-zinc-400">${toPersianDigits(item.price)} هزار تومان × ${toPersianDigits(qty)}</span>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="font-bold text-gold-300 text-sm sm:text-base">${toPersianDigits(rowSum)} هزار تومان</span>
+                            <div class="flex items-center gap-2 bg-obsidian-800 border border-zinc-700 rounded-lg px-2 py-1">
+                                <button onclick="changeQty(${item.id}, 1)" class="text-gold-400 hover:text-gold-300 font-bold px-1">+</button>
+                                <span class="text-xs font-bold w-4 text-center">${toPersianDigits(qty)}</span>
+                                <button onclick="changeQty(${item.id}, -1)" class="text-zinc-400 hover:text-red-400 font-bold px-1">−</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            totalEl.textContent = toPersianDigits(total);
+        }
+
+        function copyText(text, message) {
+            navigator.clipboard.writeText(text).then(() => showToast(message)).catch(() => {
+                const tempInput = document.createElement('textarea');
+                tempInput.value = text;
+                document.body.appendChild(tempInput);
+                tempInput.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempInput);
+                showToast(message);
+            });
+        }
+
+        let toastTimeout;
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').textContent = msg;
+            toast.classList.remove('opacity-0', '-translate-y-4');
+            toast.classList.add('opacity-100', 'translate-y-0');
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', '-translate-y-4');
+            }, 2600);
+        }
+
+        window.onload = loadMenuFromDB;
+    </script>
+</body>
+</html>

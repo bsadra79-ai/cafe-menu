@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>پنل مدیریت منو | کافه ورزشی</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Vazirmatn', 'sans-serif'] },
+                    colors: {
+                        gold: { 300: '#F2D07D', 400: '#E6B84D', 500: '#D4AF37', 600: '#B89225' },
+                        obsidian: { 800: '#18181B', 900: '#101013', 950: '#09090B' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Vazirmatn', sans-serif; background-color: #09090B; color: #F4F4F5; }
+        .bg-gold-gradient { background: linear-gradient(135deg, #E6B84D 0%, #D4AF37 50%, #947218 100%); }
+    </style>
+</head>
+<body class="min-h-screen p-4 sm:p-8">
+
+    <!-- Toast -->
+    <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 transition-all duration-300">
+        <div class="bg-obsidian-800 border-2 border-gold-500 text-gold-300 px-5 py-3 rounded-2xl shadow-2xl font-bold text-sm" id="toast-msg"></div>
+    </div>
+
+    <!-- صفحه ورود -->
+    <div id="login-view" class="max-w-md mx-auto mt-16 bg-obsidian-900 border border-gold-500/30 rounded-3xl p-6 sm:p-8 shadow-2xl">
+        <div class="text-center mb-6">
+            <div class="w-14 h-14 mx-auto rounded-2xl bg-gold-500/10 border border-gold-500/40 flex items-center justify-center text-gold-400 mb-3">
+                <i class="ph-fill ph-lock-key text-3xl"></i>
+            </div>
+            <h1 class="text-2xl font-black text-gold-400">ورود به پنل ادمین</h1>
+            <p class="text-xs text-zinc-400 mt-1">ایمیل و رمز عبور ساخته شده در Supabase را وارد کنید</p>
+        </div>
+        <form onsubmit="handleLogin(event)" class="space-y-4">
+            <div>
+                <label class="block text-xs text-zinc-400 mb-1.5">ایمیل</label>
+                <input type="email" id="login-email" required class="w-full bg-obsidian-950 border border-zinc-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-gold-500" dir="ltr">
+            </div>
+            <div>
+                <label class="block text-xs text-zinc-400 mb-1.5">رمز عبور</label>
+                <input type="password" id="login-password" required class="w-full bg-obsidian-950 border border-zinc-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-gold-500" dir="ltr">
+            </div>
+            <button type="submit" class="w-full bg-gold-gradient text-black font-extrabold py-3 rounded-xl hover:brightness-110 transition-all">ورود به پنل</button>
+            <a href="index.html" class="block text-center text-xs text-zinc-400 hover:text-gold-400 pt-2">بازگشت به منوی کافه</a>
+        </form>
+    </div>
+
+    <!-- پنل مدیریت -->
+    <div id="admin-view" class="hidden max-w-5xl mx-auto space-y-8">
+        <!-- Header -->
+        <header class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-obsidian-900 border border-gold-500/30 rounded-2xl p-4 sm:p-5">
+            <div class="flex items-center gap-3">
+                <i class="ph-fill ph-sliders-horizontal text-3xl text-gold-400"></i>
+                <div>
+                    <h1 class="text-xl font-black text-gold-400">مدیریت منوی کافه</h1>
+                    <p class="text-xs text-zinc-400">افزودن، ویرایش و کنترل موجودی آیتم‌ها</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <a href="index.html" target="_blank" class="px-4 py-2 rounded-xl bg-obsidian-800 border border-zinc-700 hover:border-gold-500 text-xs font-bold flex items-center gap-1.5">
+                    <i class="ph ph-eye text-base text-gold-400"></i>
+                    <span>مشاهده منو</span>
+                </a>
+                <button onclick="handleLogout()" class="px-4 py-2 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500 hover:text-white text-xs font-bold transition-colors">خروج</button>
+            </div>
+        </header>
+
+        <!-- فرم افزودن / ویرایش -->
+        <section class="bg-obsidian-900 border border-gold-500/25 rounded-2xl p-5 sm:p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 id="form-title" class="text-lg font-extrabold text-white">افزودن آیتم جدید</h2>
+                <button id="cancel-edit-btn" onclick="resetForm()" class="hidden text-xs text-zinc-400 hover:text-white">انصراف از ویرایش</button>
+            </div>
+            <form onsubmit="handleSaveItem(event)" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <input type="hidden" id="item-id">
+
+                <div>
+                    <label class="block text-xs text-zinc-400 mb-1">نام آیتم *</label>
+                    <input type="text" id="item-name" required placeholder="مثلاً: آیس لته پروتئین" class="w-full bg-obsidian-950 border border-zinc-700 rounded-xl px-3.5 py-2.5 text-sm focus:border-gold-500 focus:outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-xs text-zinc-400 mb-1">دسته‌بندی *</label>
+                    <select id="item-category" class="w-full bg-obsidian-950 border border-zinc-700 rounded-xl px-3.5 py-2.5 text-sm focus:border-gold-500 focus:outline-none">
+                        <option value="cold">نوشیدنی‌های خنک و شیک‌ها</option>
+                        <option value="coffee">قهوه‌ها و نوشیدنی‌های گرم</option>
+                        <option value="meals">وعده‌های غذایی رژیمی</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs text-zinc-400 mb-1">قیمت (به هزار تومان - خالی = وعده ویژه)</label>
+                    <input type="number" id="item-price" placeholder="مثلاً: 180" class="w-full bg-obsidian-950 border border-zinc-700 rounded-xl px-3.5 py-2.5 text-sm focus:border-gold-500 focus:outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-xs text-zinc-400 mb-1">برچسب روی عکس (اختیاری)</label>
+                    <input type="text" id="item-badge" placeholder="مثلاً: پروتئینی، رژیمی" class="w-full bg-obsidian-950 border border-zinc-700 rounded-xl px-3.5 py-2.5 text-sm focus:border-gold-500 focus:outline-none">
+                </div>
+
+                <div class="sm:col-span-2">
+                    <label class="block text-xs text-zinc-400 mb-1">لینک تصویر (اختیاری)</label>
+                    <input type="url" id="item-image" placeholder="https://..." dir="ltr" class="w-full bg-obsidian-950 border border-zinc-700 rounded-xl px-3.5 py-2.5 text-sm focus:border-gold-500 focus:outline-none">
+                </div>
+
+                <div class="sm:col-span-2 lg:col-span-3">
+                    <label class="block text-xs text-zinc-400 mb-1">توضیحات</label>
+                    <input type="text" id="item-desc" placeholder="ترکیبات و ویژگی‌های آیتم..." class="w-full bg-obsidian-950 border border-zinc-700 rounded-xl px-3.5 py-2.5 text-sm focus:border-gold-500 focus:outline-none">
+                </div>
+
+                <div class="sm:col-span-2 lg:col-span-3 flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
+                    <label class="flex items-center gap-2 cursor-pointer text-sm">
+                        <input type="checkbox" id="item-available" checked class="w-4 h-4 accent-gold-500">
+                        <span>موجود در منو</span>
+                    </label>
+                    <button type="submit" id="save-btn" class="w-full sm:w-auto px-8 py-2.5 rounded-xl bg-gold-gradient text-black font-extrabold hover:brightness-110 transition-all">
+                        ذخیره آیتم
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <!-- لیست آیتم‌ها -->
+        <section class="bg-obsidian-900 border border-zinc-800 rounded-2xl p-5 sm:p-6">
+            <h2 class="text-lg font-extrabold text-gold-300 mb-4">لیست آیتم‌های فعلی (<span id="items-count">0</span>)</h2>
+            <div id="admin-items-list" class="space-y-3"></div>
+        </section>
+    </div>
+
+    <script src="config.js"></script>
+    <script>
+        const categoryNames = { cold: 'نوشیدنی خنک', coffee: 'قهوه', meals: 'وعده غذایی' };
+        let allItems = [];
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            document.getElementById('toast-msg').textContent = msg;
+            t.classList.remove('opacity-0');
+            setTimeout(() => t.classList.add('opacity-0'), 2500);
+        }
+
+        async function checkAuth() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session) {
+                document.getElementById('login-view').classList.add('hidden');
+                document.getElementById('admin-view').classList.remove('hidden');
+                fetchItems();
+            } else {
+                document.getElementById('login-view').classList.remove('hidden');
+                document.getElementById('admin-view').classList.add('hidden');
+            }
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            if (error) return showToast('ایمیل یا رمز عبور اشتباه است!');
+            showToast('خوش آمدید!');
+            checkAuth();
+        }
+
+        async function handleLogout() {
+            await supabaseClient.auth.signOut();
+            checkAuth();
+        }
+
+        async function fetchItems() {
+            const { data, error } = await supabaseClient.from('menu_items').select('*').order('id', { ascending: false });
+            if (error) return showToast('خطا در دریافت اطلاعات');
+            allItems = data || [];
+            document.getElementById('items-count').textContent = allItems.length;
+            renderAdminList();
+        }
+
+        function renderAdminList() {
+            const list = document.getElementById('admin-items-list');
+            list.innerHTML = allItems.map(item => `
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-obsidian-950 border border-zinc-800 rounded-xl p-3.5 ${!item.available ? 'opacity-60' : ''}">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <img src="${item.image || 'https://placehold.co/100/18181B/D4AF37?text=Menu'}" class="w-12 h-12 rounded-lg object-cover border border-gold-500/30 shrink-0">
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-2">
+                                <h3 class="font-bold text-sm text-white truncate">${item.name}</h3>
+                                <span class="text-[10px] px-2 py-0.5 rounded bg-gold-500/10 text-gold-300 border border-gold-500/20">${categoryNames[item.category] || item.category}</span>
+                            </div>
+                            <p class="text-xs text-zinc-400 mt-0.5">${item.price !== null ? item.price + ' هزار تومان' : 'وعده ویژه'}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <button onclick="toggleAvailable(${item.id}, ${!item.available})" class="px-3 py-1.5 rounded-lg text-xs font-bold border ${item.available ? 'border-emerald-500/40 text-emerald-400 bg-emerald-500/10' : 'border-zinc-700 text-zinc-400 bg-zinc-800'}">
+                            ${item.available ? 'موجود' : 'ناموجود'}
+                        </button>
+                        <button onclick="editItem(${item.id})" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-gold-500/10 text-gold-300 border border-gold-500/30 hover:bg-gold-500 hover:text-black">ویرایش</button>
+                        <button onclick="deleteItem(${item.id})" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500 hover:text-white">حذف</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function handleSaveItem(e) {
+            e.preventDefault();
+            const id = document.getElementById('item-id').value;
+            const priceVal = document.getElementById('item-price').value;
+            const payload = {
+                name: document.getElementById('item-name').value.trim(),
+                category: document.getElementById('item-category').value,
+                price: priceVal === '' ? null : parseInt(priceVal, 10),
+                badge: document.getElementById('item-badge').value.trim(),
+                image: document.getElementById('item-image').value.trim(),
+                description: document.getElementById('item-desc').value.trim(),
+                available: document.getElementById('item-available').checked
+            };
+
+            let error;
+            if (id) {
+                ({ error } = await supabaseClient.from('menu_items').update(payload).eq('id', id));
+            } else {
+                ({ error } = await supabaseClient.from('menu_items').insert([payload]));
+            }
+
+            if (error) return showToast('خطا در ذخیره‌سازی!');
+            showToast(id ? 'آیتم با موفقیت ویرایش شد' : 'آیتم جدید اضافه شد');
+            resetForm();
+            fetchItems();
+        }
+
+        function editItem(id) {
+            const item = allItems.find(i => i.id === id);
+            if (!item) return;
+            document.getElementById('item-id').value = item.id;
+            document.getElementById('item-name').value = item.name;
+            document.getElementById('item-category').value = item.category;
+            document.getElementById('item-price').value = item.price !== null ? item.price : '';
+            document.getElementById('item-badge').value = item.badge || '';
+            document.getElementById('item-image').value = item.image || '';
+            document.getElementById('item-desc').value = item.description || '';
+            document.getElementById('item-available').checked = item.available;
+            document.getElementById('form-title').textContent = `ویرایش «${item.name}»`;
+            document.getElementById('save-btn').textContent = 'ذخیره تغییرات';
+            document.getElementById('cancel-edit-btn').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function resetForm() {
+            document.getElementById('item-id').value = '';
+            document.querySelector('#admin-view form').reset();
+            document.getElementById('form-title').textContent = 'افزودن آیتم جدید';
+            document.getElementById('save-btn').textContent = 'ذخیره آیتم';
+            document.getElementById('cancel-edit-btn').classList.add('hidden');
+        }
+
+        async function toggleAvailable(id, status) {
+            const { error } = await supabaseClient.from('menu_items').update({ available: status }).eq('id', id);
+            if (error) return showToast('خطا در تغییر وضعیت');
+            fetchItems();
+        }
+
+        async function deleteItem(id) {
+            if (!confirm('آیا از حذف این آیتم مطمئن هستید؟')) return;
+            const { error } = await supabaseClient.from('menu_items').delete().eq('id', id);
+            if (error) return showToast('خطا در حذف آیتم');
+            showToast('آیتم حذف شد');
+            fetchItems();
+        }
+
+        window.onload = checkAuth;
+    </script>
+</body>
+</html>
