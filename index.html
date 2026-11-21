@@ -17,11 +17,11 @@
                     fontFamily: { sans: ['Vazirmatn', 'sans-serif'] },
                     colors: {
                         gold: {
-                            100: '#FDF6E2', 200: '#F9E6B3', 300: '#F2D07D',
-                            400: '#E6B84D', 500: '#D4AF37', 600: '#B89225',
-                            700: '#947218', 800: '#6E5310', 900: '#4A3709',
+                            100: '#F4FDE0', 200: '#E8FBB8', 300: '#D9F87A',
+                            400: '#CEF64E', 500: '#C6F432', 600: '#A3D116',
+                            700: '#7BA10E', 800: '#58750A', 900: '#3B4F07',
                         },
-                        obsidian: { 800: '#18181B', 900: '#101013', 950: '#09090B' }
+                        obsidian: { 800: '#16161A', 900: '#111114', 950: '#0B0B0C' }
                     }
                 }
             }
@@ -29,16 +29,16 @@
     </script>
 
     <style>
-        body { font-family: 'Vazirmatn', sans-serif; background-color: #09090B; color: #F4F4F5; overflow-x: hidden; }
-        .text-gold-gradient { background: linear-gradient(135deg, #F9E6B3 0%, #D4AF37 50%, #B89225 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .bg-gold-gradient { background: linear-gradient(135deg, #E6B84D 0%, #D4AF37 50%, #947218 100%); }
-        .gold-card { background: linear-gradient(145deg, rgba(24, 24, 27, 0.9) 0%, rgba(16, 16, 19, 0.95) 100%); border: 1px solid rgba(212, 175, 55, 0.2); transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
-        .gold-card:hover { border-color: rgba(212, 175, 55, 0.6); box-shadow: 0 12px 30px -10px rgba(212, 175, 55, 0.18); transform: translateY(-4px); }
+        body { font-family: 'Vazirmatn', sans-serif; background-color: #0B0B0C; color: #FFFFFF; overflow-x: hidden; }
+        .text-gold-gradient { background: linear-gradient(135deg, #FFFFFF 0%, #C6F432 55%, #A3D116 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .bg-gold-gradient { background: linear-gradient(135deg, #D9F87A 0%, #C6F432 50%, #A3D116 100%); }
+        .gold-card { background: linear-gradient(145deg, rgba(22, 22, 26, 0.92) 0%, rgba(11, 11, 12, 0.96) 100%); border: 1px solid rgba(198, 244, 50, 0.2); transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
+        .gold-card:hover { border-color: rgba(198, 244, 50, 0.65); box-shadow: 0 12px 30px -10px rgba(198, 244, 50, 0.18); transform: translateY(-4px); }
         ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #09090B; }
-        ::-webkit-scrollbar-thumb { background: #3F3F46; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #D4AF37; }
-        @keyframes pulse-border { 0%, 100% { border-color: rgba(212, 175, 55, 0.4); } 50% { border-color: rgba(212, 175, 55, 1); } }
+        ::-webkit-scrollbar-track { background: #0B0B0C; }
+        ::-webkit-scrollbar-thumb { background: #27272A; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #C6F432; }
+        @keyframes pulse-border { 0%, 100% { border-color: rgba(198, 244, 50, 0.35); } 50% { border-color: rgba(198, 244, 50, 1); } }
         .animate-gold-border { animation: pulse-border 2.5s infinite; }
     </style>
 </head>
@@ -293,7 +293,7 @@
         }
 
         function createCardHTML(item) {
-            const fallbackUrl = `https://placehold.co/400x300/18181B/D4AF37?text=${encodeURIComponent(item.name)}`;
+            const fallbackUrl = `https://placehold.co/400x300/0B0B0C/C6F432?text=${encodeURIComponent(item.name)}`;
             const priceText = item.price !== null ? `${toPersianDigits(item.price)} هزار تومان` : 'وعده ویژه';
             const isAvailable = item.available !== false;
 
