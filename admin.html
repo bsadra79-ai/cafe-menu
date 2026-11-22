@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>پنل مدیریت منو | کافه ورزشی</title>
+    <title>پنل مدیریت | کافه باشگاه بانک تجارت</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
@@ -15,16 +15,16 @@
                 extend: {
                     fontFamily: { sans: ['Vazirmatn', 'sans-serif'] },
                     colors: {
-                        gold: { 300: '#F2D07D', 400: '#E6B84D', 500: '#D4AF37', 600: '#B89225' },
-                        obsidian: { 800: '#18181B', 900: '#101013', 950: '#09090B' }
+                        gold: { 300: '#D9F87A', 400: '#CEF64E', 500: '#C6F432', 600: '#A3D116' },
+                        obsidian: { 800: '#16161A', 900: '#111114', 950: '#0B0B0C' }
                     }
                 }
             }
         }
     </script>
     <style>
-        body { font-family: 'Vazirmatn', sans-serif; background-color: #09090B; color: #F4F4F5; }
-        .bg-gold-gradient { background: linear-gradient(135deg, #E6B84D 0%, #D4AF37 50%, #947218 100%); }
+        body { font-family: 'Vazirmatn', sans-serif; background-color: #0B0B0C; color: #FFFFFF; }
+        .bg-gold-gradient { background: linear-gradient(135deg, #D9F87A 0%, #C6F432 50%, #A3D116 100%); }
     </style>
 </head>
 <body class="min-h-screen p-4 sm:p-8">
@@ -32,6 +32,14 @@
     <!-- Toast -->
     <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 transition-all duration-300">
         <div class="bg-obsidian-800 border-2 border-gold-500 text-gold-300 px-5 py-3 rounded-2xl shadow-2xl font-bold text-sm" id="toast-msg"></div>
+    </div>
+
+    <!-- مودال نمایش بزرگ عکس رسید -->
+    <div id="receipt-modal" onclick="closeReceiptModal()" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="relative max-w-2xl w-full bg-obsidian-900 border border-gold-500/40 rounded-2xl p-3" onclick="event.stopPropagation()">
+            <button onclick="closeReceiptModal()" class="absolute -top-3 -left-3 w-9 h-9 rounded-full bg-red-500 text-white flex items-center justify-center font-bold shadow-lg">✕</button>
+            <img id="modal-receipt-img" class="w-full max-h-[80vh] object-contain rounded-xl">
+        </div>
     </div>
 
     <!-- صفحه ورود -->
@@ -58,14 +66,14 @@
     </div>
 
     <!-- پنل مدیریت -->
-    <div id="admin-view" class="hidden max-w-5xl mx-auto space-y-8">
+    <div id="admin-view" class="hidden max-w-5xl mx-auto space-y-6">
         <!-- Header -->
         <header class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-obsidian-900 border border-gold-500/30 rounded-2xl p-4 sm:p-5">
             <div class="flex items-center gap-3">
                 <i class="ph-fill ph-sliders-horizontal text-3xl text-gold-400"></i>
                 <div>
-                    <h1 class="text-xl font-black text-gold-400">مدیریت منوی کافه</h1>
-                    <p class="text-xs text-zinc-400">افزودن، ویرایش و کنترل موجودی آیتم‌ها</p>
+                    <h1 class="text-xl font-black text-gold-400">پنل مدیریت کافه باشگاه بانک تجارت</h1>
+                    <p class="text-xs text-zinc-400">بررسی سفارشات، رسیدها و مدیریت منو</p>
                 </div>
             </div>
             <div class="flex items-center gap-3">
@@ -77,72 +85,99 @@
             </div>
         </header>
 
-        <!-- فرم افزودن / ویرایش -->
-        <section class="bg-obsidian-900 border border-gold-500/25 rounded-2xl p-5 sm:p-6">
-            <div class="flex items-center justify-between mb-4">
-                <h2 id="form-title" class="text-lg font-extrabold text-white">افزودن آیتم جدید</h2>
-                <button id="cancel-edit-btn" onclick="resetForm()" class="hidden text-xs text-zinc-400 hover:text-white">انصراف از ویرایش</button>
+        <!-- تب‌های ناوبری پنل -->
+        <div class="flex items-center gap-3">
+            <button onclick="switchTab('orders')" id="btn-tab-orders" class="px-5 py-2.5 rounded-xl text-sm font-extrabold bg-gold-gradient text-black flex items-center gap-2">
+                <i class="ph-fill ph-receipt text-lg"></i>
+                <span>سفارشات و رسیدها</span>
+                <span id="pending-badge" class="bg-black/20 px-2 py-0.5 rounded-lg text-xs">0</span>
+            </button>
+            <button onclick="switchTab('menu')" id="btn-tab-menu" class="px-5 py-2.5 rounded-xl text-sm font-bold bg-obsidian-900 text-zinc-300 border border-zinc-800 hover:border-gold-500 flex items-center gap-2">
+                <i class="ph-fill ph-list-bullets text-lg text-gold-400"></i>
+                <span>مدیریت منو</span>
+            </button>
+        </div>
+
+        <!-- ==================== بخش سفارشات و رسیدها ==================== -->
+        <div id="tab-orders" class="space-y-4">
+            <div class="flex items-center justify-between">
+                <h2 class="text-lg font-extrabold text-gold-300">لیست سفارش‌های ثبت شده</h2>
+                <button onclick="fetchOrders()" class="text-xs bg-obsidian-900 border border-zinc-700 hover:border-gold-500 px-3.5 py-2 rounded-xl flex items-center gap-1.5 text-zinc-300">
+                    <i class="ph ph-arrows-clockwise text-base text-gold-400"></i>
+                    <span>بروزرسانی لیست</span>
+                </button>
             </div>
-            <form onsubmit="handleSaveItem(event)" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <input type="hidden" id="item-id">
+            <div id="orders-list" class="space-y-4"></div>
+        </div>
 
-                <div>
-                    <label class="block text-xs text-zinc-400 mb-1">نام آیتم *</label>
-                    <input type="text" id="item-name" required placeholder="مثلاً: آیس لته پروتئین" class="w-full bg-obsidian-950 border border-zinc-700 rounded-xl px-3.5 py-2.5 text-sm focus:border-gold-500 focus:outline-none">
+        <!-- ==================== بخش مدیریت منو ==================== -->
+        <div id="tab-menu" class="hidden space-y-6">
+            <section class="bg-obsidian-900 border border-gold-500/25 rounded-2xl p-5 sm:p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 id="form-title" class="text-lg font-extrabold text-white">افزودن آیتم جدید</h2>
+                    <button id="cancel-edit-btn" onclick="resetForm()" class="hidden text-xs text-zinc-400 hover:text-white">انصراف از ویرایش</button>
                 </div>
+                <form onsubmit="handleSaveItem(event)" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <input type="hidden" id="item-id">
 
-                <div>
-                    <label class="block text-xs text-zinc-400 mb-1">دسته‌بندی *</label>
-                    <select id="item-category" class="w-full bg-obsidian-950 border border-zinc-700 rounded-xl px-3.5 py-2.5 text-sm focus:border-gold-500 focus:outline-none">
-                        <option value="cold">نوشیدنی‌های خنک و شیک‌ها</option>
-                        <option value="coffee">قهوه‌ها و نوشیدنی‌های گرم</option>
-                        <option value="meals">وعده‌های غذایی رژیمی</option>
-                    </select>
-                </div>
+                    <div>
+                        <label class="block text-xs text-zinc-400 mb-1">نام آیتم *</label>
+                        <input type="text" id="item-name" required placeholder="مثلاً: آیس لته پروتئین" class="w-full bg-obsidian-950 border border-zinc-700 rounded-xl px-3.5 py-2.5 text-sm focus:border-gold-500 focus:outline-none">
+                    </div>
 
-                <div>
-                    <label class="block text-xs text-zinc-400 mb-1">قیمت (به هزار تومان - خالی = وعده ویژه)</label>
-                    <input type="number" id="item-price" placeholder="مثلاً: 180" class="w-full bg-obsidian-950 border border-zinc-700 rounded-xl px-3.5 py-2.5 text-sm focus:border-gold-500 focus:outline-none">
-                </div>
+                    <div>
+                        <label class="block text-xs text-zinc-400 mb-1">دسته‌بندی *</label>
+                        <select id="item-category" class="w-full bg-obsidian-950 border border-zinc-700 rounded-xl px-3.5 py-2.5 text-sm focus:border-gold-500 focus:outline-none">
+                            <option value="cold">نوشیدنی‌های خنک و شیک‌ها</option>
+                            <option value="coffee">قهوه‌ها و نوشیدنی‌های گرم</option>
+                            <option value="meals">وعده‌های غذایی رژیمی</option>
+                        </select>
+                    </div>
 
-                <div>
-                    <label class="block text-xs text-zinc-400 mb-1">برچسب روی عکس (اختیاری)</label>
-                    <input type="text" id="item-badge" placeholder="مثلاً: پروتئینی، رژیمی" class="w-full bg-obsidian-950 border border-zinc-700 rounded-xl px-3.5 py-2.5 text-sm focus:border-gold-500 focus:outline-none">
-                </div>
+                    <div>
+                        <label class="block text-xs text-zinc-400 mb-1">قیمت (به هزار تومان - خالی = وعده ویژه)</label>
+                        <input type="number" id="item-price" placeholder="مثلاً: 180" class="w-full bg-obsidian-950 border border-zinc-700 rounded-xl px-3.5 py-2.5 text-sm focus:border-gold-500 focus:outline-none">
+                    </div>
 
-                <div class="sm:col-span-2">
-                    <label class="block text-xs text-zinc-400 mb-1">لینک تصویر (اختیاری)</label>
-                    <input type="url" id="item-image" placeholder="https://..." dir="ltr" class="w-full bg-obsidian-950 border border-zinc-700 rounded-xl px-3.5 py-2.5 text-sm focus:border-gold-500 focus:outline-none">
-                </div>
+                    <div>
+                        <label class="block text-xs text-zinc-400 mb-1">برچسب روی عکس (اختیاری)</label>
+                        <input type="text" id="item-badge" placeholder="مثلاً: پروتئینی، رژیمی" class="w-full bg-obsidian-950 border border-zinc-700 rounded-xl px-3.5 py-2.5 text-sm focus:border-gold-500 focus:outline-none">
+                    </div>
 
-                <div class="sm:col-span-2 lg:col-span-3">
-                    <label class="block text-xs text-zinc-400 mb-1">توضیحات</label>
-                    <input type="text" id="item-desc" placeholder="ترکیبات و ویژگی‌های آیتم..." class="w-full bg-obsidian-950 border border-zinc-700 rounded-xl px-3.5 py-2.5 text-sm focus:border-gold-500 focus:outline-none">
-                </div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs text-zinc-400 mb-1">لینک تصویر (اختیاری)</label>
+                        <input type="url" id="item-image" placeholder="https://..." dir="ltr" class="w-full bg-obsidian-950 border border-zinc-700 rounded-xl px-3.5 py-2.5 text-sm focus:border-gold-500 focus:outline-none">
+                    </div>
 
-                <div class="sm:col-span-2 lg:col-span-3 flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
-                    <label class="flex items-center gap-2 cursor-pointer text-sm">
-                        <input type="checkbox" id="item-available" checked class="w-4 h-4 accent-gold-500">
-                        <span>موجود در منو</span>
-                    </label>
-                    <button type="submit" id="save-btn" class="w-full sm:w-auto px-8 py-2.5 rounded-xl bg-gold-gradient text-black font-extrabold hover:brightness-110 transition-all">
-                        ذخیره آیتم
-                    </button>
-                </div>
-            </form>
-        </section>
+                    <div class="sm:col-span-2 lg:col-span-3">
+                        <label class="block text-xs text-zinc-400 mb-1">توضیحات</label>
+                        <input type="text" id="item-desc" placeholder="ترکیبات و ویژگی‌های آیتم..." class="w-full bg-obsidian-950 border border-zinc-700 rounded-xl px-3.5 py-2.5 text-sm focus:border-gold-500 focus:outline-none">
+                    </div>
 
-        <!-- لیست آیتم‌ها -->
-        <section class="bg-obsidian-900 border border-zinc-800 rounded-2xl p-5 sm:p-6">
-            <h2 class="text-lg font-extrabold text-gold-300 mb-4">لیست آیتم‌های فعلی (<span id="items-count">0</span>)</h2>
-            <div id="admin-items-list" class="space-y-3"></div>
-        </section>
+                    <div class="sm:col-span-2 lg:col-span-3 flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
+                        <label class="flex items-center gap-2 cursor-pointer text-sm">
+                            <input type="checkbox" id="item-available" checked class="w-4 h-4 accent-gold-500">
+                            <span>موجود در منو</span>
+                        </label>
+                        <button type="submit" id="save-btn" class="w-full sm:w-auto px-8 py-2.5 rounded-xl bg-gold-gradient text-black font-extrabold hover:brightness-110 transition-all">
+                            ذخیره آیتم
+                        </button>
+                    </div>
+                </form>
+            </section>
+
+            <section class="bg-obsidian-900 border border-zinc-800 rounded-2xl p-5 sm:p-6">
+                <h2 class="text-lg font-extrabold text-gold-300 mb-4">لیست آیتم‌های فعلی (<span id="items-count">0</span>)</h2>
+                <div id="admin-items-list" class="space-y-3"></div>
+            </section>
+        </div>
     </div>
 
     <script src="config.js"></script>
     <script>
         const categoryNames = { cold: 'نوشیدنی خنک', coffee: 'قهوه', meals: 'وعده غذایی' };
         let allItems = [];
+        let allOrders = [];
 
         function showToast(msg) {
             const t = document.getElementById('toast');
@@ -151,11 +186,29 @@
             setTimeout(() => t.classList.add('opacity-0'), 2500);
         }
 
+        function switchTab(tab) {
+            document.getElementById('tab-orders').classList.toggle('hidden', tab !== 'orders');
+            document.getElementById('tab-menu').classList.toggle('hidden', tab !== 'menu');
+
+            const btnOrders = document.getElementById('btn-tab-orders');
+            const btnMenu = document.getElementById('btn-tab-menu');
+            if (tab === 'orders') {
+                btnOrders.className = 'px-5 py-2.5 rounded-xl text-sm font-extrabold bg-gold-gradient text-black flex items-center gap-2';
+                btnMenu.className = 'px-5 py-2.5 rounded-xl text-sm font-bold bg-obsidian-900 text-zinc-300 border border-zinc-800 hover:border-gold-500 flex items-center gap-2';
+                fetchOrders();
+            } else {
+                btnMenu.className = 'px-5 py-2.5 rounded-xl text-sm font-extrabold bg-gold-gradient text-black flex items-center gap-2';
+                btnOrders.className = 'px-5 py-2.5 rounded-xl text-sm font-bold bg-obsidian-900 text-zinc-300 border border-zinc-800 hover:border-gold-500 flex items-center gap-2';
+                fetchItems();
+            }
+        }
+
         async function checkAuth() {
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (session) {
                 document.getElementById('login-view').classList.add('hidden');
                 document.getElementById('admin-view').classList.remove('hidden');
+                fetchOrders();
                 fetchItems();
             } else {
                 document.getElementById('login-view').classList.remove('hidden');
@@ -178,9 +231,97 @@
             checkAuth();
         }
 
+        // ==================== توابع سفارشات ====================
+        async function fetchOrders() {
+            const { data, error } = await supabaseClient.from('orders').select('*').order('created_at', { ascending: false });
+            if (error) return showToast('خطا در دریافت سفارشات');
+            allOrders = data || [];
+            const pendingCount = allOrders.filter(o => o.status === 'pending').length;
+            document.getElementById('pending-badge').textContent = pendingCount;
+            renderOrders();
+        }
+
+        function renderOrders() {
+            const list = document.getElementById('orders-list');
+            if (allOrders.length === 0) {
+                list.innerHTML = `<div class="bg-obsidian-900 border border-zinc-800 rounded-2xl p-10 text-center text-zinc-500 text-sm">هنوز سفارشی ثبت نشده است.</div>`;
+                return;
+            }
+
+            list.innerHTML = allOrders.map(order => {
+                const dateStr = new Date(order.created_at).toLocaleString('fa-IR', { hour: '2-digit', minute: '2-digit', month: 'short', day: 'numeric' });
+                const isDone = order.status === 'done';
+                const itemsHtml = (order.items || []).map(i => `
+                    <li class="flex justify-between text-xs py-1 border-b border-zinc-800/60 last:border-0">
+                        <span class="text-zinc-200">${i.name} × ${i.qty}</span>
+                        <span class="text-gold-300 font-bold">${i.price * i.qty} هزار تومان</span>
+                    </li>
+                `).join('');
+
+                return `
+                    <div class="bg-obsidian-900 border ${isDone ? 'border-zinc-800 opacity-70' : 'border-gold-500/40'} rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row gap-5 justify-between">
+                        <div class="flex-grow space-y-3">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-black text-base text-white">${order.customer_name}</span>
+                                    ${order.customer_phone ? `<span class="text-xs text-zinc-400 bg-obsidian-950 px-2.5 py-1 rounded-lg border border-zinc-800" dir="ltr">${order.customer_phone}</span>` : ''}
+                                </div>
+                                <span class="text-xs text-zinc-500">${dateStr}</span>
+                            </div>
+
+                            ${order.note ? `<p class="text-xs text-gold-300 bg-gold-500/10 border border-gold-500/20 rounded-xl px-3 py-2">توضیحات: ${order.note}</p>` : ''}
+
+                            <ul class="bg-obsidian-950 border border-zinc-800 rounded-xl px-3.5 py-2">${itemsHtml}</ul>
+
+                            <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
+                                <div class="text-sm font-black text-gold-400">جمع کل: ${order.total_price} هزار تومان</div>
+                                <div class="flex items-center gap-2">
+                                    <button onclick="toggleOrderStatus(${order.id}, '${isDone ? 'pending' : 'done'}')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold border ${isDone ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40' : 'bg-gold-gradient text-black border-transparent'}">
+                                        ${isDone ? '✓ تحویل داده شد' : 'تایید و تحویل سفارش'}
+                                    </button>
+                                    <button onclick="deleteOrder(${order.id})" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500 hover:text-white">حذف</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- عکس رسید -->
+                        <div class="shrink-0 flex flex-col items-center justify-center gap-2 md:w-40">
+                            <img src="${order.receipt_url}" onclick="openReceiptModal('${order.receipt_url}')" class="w-full h-36 md:h-32 object-cover rounded-xl border border-gold-500/40 cursor-pointer hover:scale-105 transition-transform" title="کلیک برای بزرگنمایی">
+                            <button onclick="openReceiptModal('${order.receipt_url}')" class="text-[11px] text-gold-400 hover:underline">بزرگنمایی رسید</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function openReceiptModal(url) {
+            document.getElementById('modal-receipt-img').src = url;
+            document.getElementById('receipt-modal').classList.remove('hidden');
+        }
+
+        function closeReceiptModal() {
+            document.getElementById('receipt-modal').classList.add('hidden');
+        }
+
+        async function toggleOrderStatus(id, newStatus) {
+            const { error } = await supabaseClient.from('orders').update({ status: newStatus }).eq('id', id);
+            if (error) return showToast('خطا در تغییر وضعیت');
+            showToast('وضعیت سفارش بروزرسانی شد');
+            fetchOrders();
+        }
+
+        async function deleteOrder(id) {
+            if (!confirm('آیا از حذف این سفارش مطمئن هستید؟')) return;
+            const { error } = await supabaseClient.from('orders').delete().eq('id', id);
+            if (error) return showToast('خطا در حذف سفارش');
+            showToast('سفارش حذف شد');
+            fetchOrders();
+        }
+
+        // ==================== توابع مدیریت منو ====================
         async function fetchItems() {
             const { data, error } = await supabaseClient.from('menu_items').select('*').order('id', { ascending: false });
-            if (error) return showToast('خطا در دریافت اطلاعات');
+            if (error) return showToast('خطا در دریافت منو');
             allItems = data || [];
             document.getElementById('items-count').textContent = allItems.length;
             renderAdminList();
@@ -191,7 +332,7 @@
             list.innerHTML = allItems.map(item => `
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-obsidian-950 border border-zinc-800 rounded-xl p-3.5 ${!item.available ? 'opacity-60' : ''}">
                     <div class="flex items-center gap-3 min-w-0">
-                        <img src="${item.image || 'https://placehold.co/100/18181B/D4AF37?text=Menu'}" class="w-12 h-12 rounded-lg object-cover border border-gold-500/30 shrink-0">
+                        <img src="${item.image || 'https://placehold.co/100/0B0B0C/C6F432?text=Menu'}" class="w-12 h-12 rounded-lg object-cover border border-gold-500/30 shrink-0">
                         <div class="min-w-0">
                             <div class="flex items-center gap-2">
                                 <h3 class="font-bold text-sm text-white truncate">${item.name}</h3>
@@ -257,7 +398,7 @@
 
         function resetForm() {
             document.getElementById('item-id').value = '';
-            document.querySelector('#admin-view form').reset();
+            document.querySelector('#tab-menu form').reset();
             document.getElementById('form-title').textContent = 'افزودن آیتم جدید';
             document.getElementById('save-btn').textContent = 'ذخیره آیتم';
             document.getElementById('cancel-edit-btn').classList.add('hidden');
